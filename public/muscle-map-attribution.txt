@@ -1,0 +1,8 @@
+Base anatomy illustration used by the interactive muscle map:
+
+Male front-back 3d-shaded human illustration.svg
+Author: Goran tek-en
+Source: https://commons.wikimedia.org/wiki/File:Male_front-back_3d-shaded_human_illustration.svg
+License: CC BY-SA 4.0
+
+The GymBuddy muscle map uses this file locally as the base body reference and layers custom interactive muscle highlights on top.
