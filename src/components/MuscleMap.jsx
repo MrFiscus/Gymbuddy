@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
-import { muscleDefinitions, musclePaths } from '../data/muscleMap'
+import { muscleDefinitions, muscleOverlayTransforms, musclePaths } from '../data/muscleMap'
 
 function normalizeGroup(pathId) {
   return pathId.replace(/-(left|right|upper|lower|back-left|back-right)$/, '')
@@ -13,6 +13,17 @@ export function MuscleMap({ selectedMuscle, onSelectMuscle }) {
 
   function handleSelect(group) {
     onSelectMuscle(selectedMuscle === group ? null : group)
+  }
+
+  function getTooltipStyle(group) {
+    const definition = muscleDefinitions[group]
+    if (!definition) return undefined
+
+    const transform = muscleOverlayTransforms[side]
+    return {
+      left: definition.x * transform.scaleX + transform.translateX,
+      top: definition.y * transform.scaleY + transform.translateY,
+    }
   }
 
   return (
@@ -44,34 +55,39 @@ export function MuscleMap({ selectedMuscle, onSelectMuscle }) {
         <div className={`body-flip-card ${side === 'back' ? 'is-back' : ''}`}>
           {['front', 'back'].map((view) => (
             <div key={view} className={`body-face body-face-${view}`}>
-              <div className={`body-reference-frame body-reference-frame-${view}`} aria-hidden="true">
-                <img
-                  src="/male-front-back-base.svg"
-                  alt=""
-                  className={`body-reference-asset body-reference-asset-${view}`}
-                  draggable="false"
-                />
-              </div>
-
               <svg viewBox="0 0 340 520" className="muscle-svg" role="img" aria-label={`${view} body muscles`}>
-                {musclePaths[view].map((segment) => {
-                  const group = segment.group || normalizeGroup(segment.id)
-                  const active = selectedMuscle === group
-                  const glowing = hovered === group || active
-                  return (
-                    <path
-                      key={segment.id}
-                      id={segment.id}
-                      d={segment.d}
-                      className={`muscle-path ${glowing ? 'is-hovered' : ''} ${active ? 'is-active' : ''}`}
-                      filter={glowing ? 'url(#muscleGlow)' : undefined}
-                      onMouseEnter={() => setHovered(group)}
-                      onMouseLeave={() => setHovered(null)}
-                      onClick={() => handleSelect(group)}
-                      onTouchStart={() => setHovered(group)}
-                    />
-                  )
-                })}
+                <image
+                  href="/male-front-back-base.svg"
+                  x={view === 'front' ? 44 : -216}
+                  y="12"
+                  width="520"
+                  height="606"
+                  className="body-reference-svg"
+                  preserveAspectRatio="xMinYMin meet"
+                  aria-hidden="true"
+                />
+                <g
+                  transform={`translate(${muscleOverlayTransforms[view].translateX} ${muscleOverlayTransforms[view].translateY}) scale(${muscleOverlayTransforms[view].scaleX} ${muscleOverlayTransforms[view].scaleY})`}
+                >
+                  {musclePaths[view].map((segment) => {
+                    const group = segment.group || normalizeGroup(segment.id)
+                    const active = selectedMuscle === group
+                    const glowing = hovered === group || active
+                    return (
+                      <path
+                        key={segment.id}
+                        id={segment.id}
+                        d={segment.d}
+                        className={`muscle-path ${glowing ? 'is-hovered' : ''} ${active ? 'is-active' : ''}`}
+                        filter={glowing ? 'url(#muscleGlow)' : undefined}
+                        onMouseEnter={() => setHovered(group)}
+                        onMouseLeave={() => setHovered(null)}
+                        onClick={() => handleSelect(group)}
+                        onTouchStart={() => setHovered(group)}
+                      />
+                    )
+                  })}
+                </g>
               </svg>
             </div>
           ))}
@@ -85,7 +101,7 @@ export function MuscleMap({ selectedMuscle, onSelectMuscle }) {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 4 }}
-              style={{ left: muscleDefinitions[hovered].x, top: muscleDefinitions[hovered].y }}
+              style={getTooltipStyle(hovered)}
             >
               {muscleDefinitions[hovered].label}
             </motion.div>
